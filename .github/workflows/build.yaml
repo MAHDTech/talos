@@ -107,7 +107,7 @@ jobs:
     timeout-minutes: 1440
     continue-on-error: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
 
     strategy:
       fail-fast: true
@@ -116,18 +116,6 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: free_disk_space
-        name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v4
@@ -198,7 +186,7 @@ jobs:
     timeout-minutes: 1440
     continue-on-error: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
 
     strategy:
       fail-fast: true
@@ -207,18 +195,6 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: free_disk_space
-        name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v4
@@ -298,7 +274,7 @@ jobs:
     timeout-minutes: 1440
     continue-on-error: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
 
     strategy:
       fail-fast: true
@@ -307,18 +283,6 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: free_disk_space
-        name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v4
@@ -378,7 +342,7 @@ jobs:
     timeout-minutes: 1440
     continue-on-error: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
 
     strategy:
       fail-fast: true
@@ -387,18 +351,6 @@ jobs:
           - ubuntu-latest
 
     steps:
-      - id: free_disk_space
-        name: Free Disk Space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - id: checkout_repository
         name: Checkout repository
         uses: actions/checkout@v4
@@ -455,7 +407,7 @@ jobs:
       - overlay
       - boot
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - id: download_artifacts
