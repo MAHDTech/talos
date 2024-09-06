@@ -34,7 +34,7 @@ on:
         description: "Repository to build packages from"
         required: true
         type: string
-        default: "https://github.com/mahdtech/pkgs"
+        default: "mahdtech/pkgs"
       branch_packages:
         description: "Branch to build packages from"
         required: true
@@ -47,7 +47,7 @@ on:
         description: "Repository to build base from"
         required: true
         type: string
-        default: "https://github.com/siderolabs/talos"
+        default: "siderolabs/talos"
       branch_base:
         description: "Branch to build base from"
         required: true
@@ -60,7 +60,7 @@ on:
         description: "Repository to build overlay from"
         required: true
         type: string
-        default: "https://github.com/mahdtech/sbc-rockchip"
+        default: "mahdtech/sbc-rockchip"
       branch_overlay:
         description: "Branch to build overlay from"
         required: true
