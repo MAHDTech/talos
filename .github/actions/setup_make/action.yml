@@ -16,10 +16,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - id: checkout_repository
-      name: Checkout repository
-      uses: actions/checkout@v4
-
     - id: checkout_repository_make
       name: Checkout repository for make
       uses: actions/checkout@v4

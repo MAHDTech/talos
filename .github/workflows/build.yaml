@@ -111,6 +111,10 @@ jobs:
           - ubuntu-latest
 
     steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
       # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
@@ -182,6 +186,10 @@ jobs:
           - ubuntu-latest
 
     steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
       # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
@@ -258,6 +266,10 @@ jobs:
           - ubuntu-latest
 
     steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
       # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
@@ -319,6 +331,10 @@ jobs:
           - ubuntu-latest
 
     steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
       # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
