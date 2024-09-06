@@ -4,6 +4,11 @@ name: Build
 on:
   workflow_dispatch:
     inputs:
+      release:
+        description: "Create a GitHub Release"
+        required: true
+        type: boolean
+        default: false
       talos_version:
         description: "Talos version"
         required: true
@@ -289,3 +294,145 @@ jobs:
             PUSH=true \
             all
           popd
+
+  ##################################################
+  # Boot
+  ##################################################
+
+  boot:
+    name: Boot
+
+    needs:
+      - packages
+      - base
+      - overlay
+
+    timeout-minutes: 1440
+    continue-on-error: false
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      # Setup Docker Buildx.
+      - id: docker_buildx
+        name: Setup Docker Buildx
+        uses: ./.github/actions/docker-buildx
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Setup Make.
+      - id: make
+        name: Setup and run Make
+        uses: ./.github/actions/setup_make
+        with:
+          repository: ${{ inputs.repo_overlay }}
+          branch: ${{ inputs.branch_overlay }}
+          path: ${{ github.workspace }}/_make/overlay
+
+      # Run imager
+      - id: imager
+        name: Run imager
+        uses: ./.github/actions/imager
+        with:
+          workdir: ${{ github.workspace }}/_make/overlay
+          imager_image: ${{ env.REGISTRY }}/${{ github.actor }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
+          overlay_name: ${{ inputs.device }}
+          overlay_image: ${{ env.REGISTRY }}/${{ github.actor }}/sbc-rockchip:${{ inputs.talos_version }}-${{ inputs.device }}
+
+      # Upload artifacts
+      - id: upload_artifacts
+        name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: ${{ inputs.device }}-${{ inputs.talos_version }}
+          path: ${{ github.workspace }}/_make/overlay/_out/metal-arm64.raw.xz
+
+  ##################################################
+  # Release
+  ##################################################
+
+  release:
+    name: Release
+
+    if: ${{ github.event.inputs.release == 'true' }}
+
+    needs:
+      - packages
+      - base
+      - overlay
+      - boot
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - id: download_artifacts
+        name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.device }}-${{ inputs.talos_version }}
+          path: ${{ github.workspace }}/_artifacts
+
+      - id: show_artifacts
+        name: Show artifacts
+        run: |
+          ls -lah ${{ github.workspace }}/_artifacts
+
+      - id: calver
+        name: Set Calver Version
+        run: |
+          if [[ "${BRANCH_NAME_CURRENT:-UNKNOWN}" == "${BRANCH_NAME_DEFAULT:-DEFAULT}" ]];
+          then
+            echo "Set CalVer for default branch"
+            echo "package_version=$(date '+%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+          else
+            echo "Set CalVer for non-default branch"
+            echo "package_version=$(date '+%Y.%m.%d')-$(date -d "1970-01-01 UTC $(date +%T)" +%s)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: check_tags
+        name: Check git tags
+        env:
+          TAG: ${{ steps.calver.outputs.package_version }}
+        run: |
+          git fetch --tags
+          if git show-ref --tags --verify --quiet "refs/tags/$TAG"
+          then
+            echo "The Release tag ${TAG} already exists, did you forget to bump the version?"
+            exit 1
+          elif [[ "${BRANCH_NAME_CURRENT:-UNKNOWN}" == "${BRANCH_NAME_DEFAULT:-DEFAULT}" ]];
+          then
+            echo "Default branch, creating release tag ${TAG}"
+            echo "CREATE_TAG=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Non-default branch, skipping release tag ${TAG}"
+            echo "CREATE_TAG=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - id: create_release
+        name: Create Release
+        if: ${{ steps.check_tags.outputs.CREATE_TAG == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ inputs.device }} v${{ steps.calver.outputs.package_version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.calver.outputs.package_version }}
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          append_body: true
+          body: |
+            ## Images
+
+            Device name: ${{ inputs.device }}
+            Talos version: ${{ inputs.talos_version }}
+
+          files: ${{ github.workspace }}/_artifacts/${{ inputs.device }}-${{ inputs.talos_version }}
