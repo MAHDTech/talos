@@ -28,5 +28,5 @@ runs:
       name: Install dependencies
       shell: bash
       run: |
-        apt update
-        apt install -y make
+        sudo apt update
+        sudo apt install -y make
