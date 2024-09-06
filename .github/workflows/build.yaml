@@ -1,0 +1,291 @@
+---
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      talos_version:
+        description: "Talos version"
+        required: true
+        type: choice
+        options:
+          - v1.7.6
+          - v1.7.5
+          - v1.7.4
+          - v1.7.3
+          - v1.7.2
+          - v1.7.1
+          - v1.7.0
+      device:
+        description: "Device"
+        required: true
+        type: choice
+        options:
+          - orangepi-5
+      #########################
+      # Packages
+      #########################
+      repo_packages:
+        description: "Repository to build packages from"
+        required: true
+        type: string
+        default: "https://github.com/mahdtech/pkgs"
+      branch_packages:
+        description: "Branch to build packages from"
+        required: true
+        type: string
+        default: "main"
+      #########################
+      # Base
+      #########################
+      repo_base:
+        description: "Repository to build base from"
+        required: true
+        type: string
+        default: "https://github.com/siderolabs/talos"
+      branch_base:
+        description: "Branch to build base from"
+        required: true
+        type: string
+        default: "main"
+      #########################
+      # Overlay
+      #########################
+      repo_overlay:
+        description: "Repository to build overlay from"
+        required: true
+        type: string
+        default: "https://github.com/mahdtech/sbc-rockchip"
+      branch_overlay:
+        description: "Branch to build overlay from"
+        required: true
+        type: string
+        default: "main"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: read
+  statuses: read
+
+env:
+  FORCE_COLOR: "1"
+
+  REGISTRY: ghcr.io
+  ORGANISATION: ${{ github.repository_owner }}
+  PROJECT: ${{ github.event.repository.name }}
+
+  BRANCH_NAME_CURRENT: ${{ github.head_ref || github.ref_name }}
+  BRANCH_NAME_DEFAULT: ${{ github.event.repository.default_branch }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ##################################################
+  # Packages
+  ##################################################
+
+  packages:
+    name: Packages
+
+    timeout-minutes: 1440
+    continue-on-error: false
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      # Setup Docker Buildx.
+      - id: docker_buildx
+        name: Setup Docker Buildx
+        uses: ./.github/actions/docker-buildx
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Setup Make.
+      - id: make
+        name: Setup and run Make
+        uses: ./.github/actions/setup_make
+        with:
+          repository: ${{ inputs.repo_packages }}
+          branch: ${{ inputs.branch_packages }}
+          path: ${{ github.workspace }}/_make/packages
+
+      # Make Packages
+      - id: make_packages
+        name: Make packages
+        env:
+          TALOS_VERSION: ${{ inputs.talos_version }}
+          DEVICE: ${{ inputs.device }}
+          REGISTRY: ${{ env.REGISTRY }}
+          USERNAME: ${{ github.actor }}
+          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
+        run: |
+          pushd ${{ github.workspace }}/_make/packages
+          echo "##### Making kernel config #####"
+          make \
+            USERNAME=${{ github.actor }} \
+            kernel-olddefconfig
+          echo "##### Making packages (kernel)#####"
+          make \
+            USERNAME=${{ github.actor }} \
+            REGISTRY=${{ env.REGISTRY }} \
+            TAG=${{ inputs.talos_version }}-${{ inputs.device }} \
+            PLATFORM=linux/amd64,linux/arm64 \
+            PUSH=true \
+            kernel
+          echo "##### Making packages (all) #####"
+          make \
+            USERNAME=${{ github.actor }} \
+            REGISTRY=${{ env.REGISTRY }} \
+            TAG=${{ inputs.talos_version }}-${{ inputs.device }} \
+            PLATFORM=linux/amd64,linux/arm64 \
+            PUSH=true
+          popd
+
+  ##################################################
+  # Base
+  ##################################################
+
+  base:
+    name: Base
+
+    needs: packages
+
+    timeout-minutes: 1440
+    continue-on-error: false
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      # Setup Docker Buildx.
+      - id: docker_buildx
+        name: Setup Docker Buildx
+        uses: ./.github/actions/docker-buildx
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Setup Make.
+      - id: make
+        name: Setup and run Make
+        uses: ./.github/actions/setup_make
+        with:
+          repository: ${{ inputs.repo_base }}
+          branch: ${{ inputs.branch_base }}
+          path: ${{ github.workspace }}/_make/base
+
+      # Make Base
+      - id: make_base
+        name: Make base
+        env:
+          TALOS_VERSION: ${{ inputs.talos_version }}
+          DEVICE: ${{ inputs.device }}
+          REGISTRY: ${{ env.REGISTRY }}
+          USERNAME: ${{ github.actor }}
+          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
+        run: |
+          pushd ${{ github.workspace }}/_make/base
+          echo "##### Making installer #####"
+          make \
+            PUSH=true \
+            installer
+          echo "##### Making talosctl-image #####"
+          make \
+            PUSH=true \
+            talosctl-image
+          echo "##### Making kernel initramfs #####"
+          make \
+            PKG_KERNEL=${{ env.REGISTRY }}/${{ github.actor }}/kernel:${{ inputs.talos_version }}-${{ inputs.device }} \
+            INSTALLER_ARCH=all \
+            PLATFORM=linux/amd64,linux/arm64 \
+            PUSH=true \
+            kernel initramfs
+          echo "##### Making imager #####"
+          make \
+            PKG_KERNEL=${{ env.REGISTRY }}/${{ github.actor }}/kernel:${{ inputs.talos_version }}-${{ inputs.device }} \
+            INSTALLER_ARCH=all \
+            PLATFORM=linux/amd64,linux/arm64 \
+            PUSH=true \
+            imager
+          popd
+
+  ##################################################
+  # Overlay
+  ##################################################
+
+  overlay:
+    name: Overlay
+
+    needs:
+      - packages
+      - base
+
+    timeout-minutes: 1440
+    continue-on-error: false
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
+
+    steps:
+      # Setup Docker Buildx.
+      - id: docker_buildx
+        name: Setup Docker Buildx
+        uses: ./.github/actions/docker-buildx
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Setup Make.
+      - id: make
+        name: Setup and run Make
+        uses: ./.github/actions/setup_make
+        with:
+          repository: ${{ inputs.repo_overlay }}
+          branch: ${{ inputs.branch_overlay }}
+          path: ${{ github.workspace }}/_make/overlay
+
+      # Make Overlay
+      - id: make_overlay
+        name: Make overlay
+        env:
+          TALOS_VERSION: ${{ inputs.talos_version }}
+          DEVICE: ${{ inputs.device }}
+          REGISTRY: ${{ env.REGISTRY }}
+          USERNAME: ${{ github.actor }}
+          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
+          PKGS_PREFIX: ${{ env.REGISTRY }}/${{ github.actor }}
+          PKGS: ${{ inputs.talos_version }}-${{ inputs.device }}
+        run: |
+          pushd ${{ github.workspace }}/_make/overlay
+          echo "##### Making overlay #####"
+          make \
+            PUSH=true \
+            all
+          popd

@@ -32,7 +32,7 @@ In this example, a custom kernel package that includes support for the device. L
 
 Next, build the Talos base artifacts bundling the custom packages.
 
-- [Notes](./base-artifacts.md)
+- [Notes](./base.md)
 
 ### Overlay
 
@@ -44,7 +44,7 @@ Next, create an overlay for the device that uses the custom kernel package.
 
 Create the boot assets for the device.
 
-- [Notes](./boot-assets.md)
+- [Notes](./boot.md)
 
 ### Flash
 
