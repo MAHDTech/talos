@@ -11,6 +11,7 @@ on:
     branches:
       - trunk
 
+  # TODO: REMOVE THIS
   pull_request:
     branches:
       - "trunk"
@@ -69,12 +70,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PACKAGES="$(\
-            gh api \
+          PACKAGES=$(gh api \
             --header "Accept: application/vnd.github+json" \
             --header "X-GitHub-Api-Version: 2022-11-28" \
             /user/packages?package_type=container \
-            | jq '[.[] | select(.name) | .name] | join("\n")')"
+            | jq '[.[] | select(.name) | .name] | join("\n")')
           echo "package_names=${PACKAGES}" >> "$GITHUB_OUTPUT"
 
       - id: delete_old_packages
