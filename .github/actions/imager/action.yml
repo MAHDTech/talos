@@ -1,0 +1,42 @@
+---
+name: Imager
+description: "A composite action to run imager"
+
+inputs:
+  workdir:
+    required: true
+    description: "The working directory to use"
+  imager_image:
+    required: true
+    description: "The imager image to use"
+  overlay_name:
+    required: true
+    description: "The overlay name to use"
+  overlay_image:
+    required: true
+    description: "The overlay image to use"
+
+runs:
+  using: "composite"
+  steps:
+    - id: imager_pull
+      name: Pull imager image
+      run: |
+        docker pull ${IMAGER_IMAGE}
+
+    - id: imager_run
+      name: Run imager
+      run: |
+        docker run \
+          --name imager \
+          --rm \
+          -t \
+          --env GITHUB_TOKEN \
+          --volume /dev:/dev \
+          --volume $PWD/_out:/out \
+          --privileged \
+          ${{ inputs.imager_image }} \
+          ${{ inputs.overlay_name }} \
+          --arch arm64 \
+          --overlay-image=${{ inputs.overlay_image }} \
+          --overlay-name=${{ inputs.overlay_name }}
