@@ -142,25 +142,26 @@ jobs:
           REGISTRY: ${{ env.REGISTRY }}
           USERNAME: ${{ github.actor }}
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
+          DIRECTORY: ${{ github.workspace }}/_make/packages
         run: |
-          pushd ${{ github.workspace }}/_make/packages
+          pushd "${DIRECTORY}"
           echo "##### Making kernel config #####"
           make \
-            USERNAME=${{ github.actor }} \
+            USERNAME="${USERNAME,,}" \
             kernel-olddefconfig
           echo "##### Making packages (kernel)#####"
           make \
-            USERNAME=${{ github.actor }} \
-            REGISTRY=${{ env.REGISTRY }} \
-            TAG=${{ inputs.talos_version }}-${{ inputs.device }} \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PLATFORM=linux/amd64,linux/arm64 \
             PUSH=true \
             kernel
           echo "##### Making packages (all) #####"
           make \
-            USERNAME=${{ github.actor }} \
-            REGISTRY=${{ env.REGISTRY }} \
-            TAG=${{ inputs.talos_version }}-${{ inputs.device }} \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PLATFORM=linux/amd64,linux/arm64 \
             PUSH=true
           popd
@@ -217,8 +218,9 @@ jobs:
           REGISTRY: ${{ env.REGISTRY }}
           USERNAME: ${{ github.actor }}
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
+          DIRECTORY: ${{ github.workspace }}/_make/base
         run: |
-          pushd ${{ github.workspace }}/_make/base
+          pushd "${DIRECTORY}"
           echo "##### Making installer #####"
           make \
             PUSH=true \
@@ -229,14 +231,14 @@ jobs:
             talosctl-image
           echo "##### Making kernel initramfs #####"
           make \
-            PKG_KERNEL=${{ env.REGISTRY }}/${{ github.actor }}/kernel:${{ inputs.talos_version }}-${{ inputs.device }} \
+            PKG_KERNEL="${REGISTRY}/${USERNAME,,}/kernel:${TALOS_VERSION}-${DEVICE}" \
             INSTALLER_ARCH=all \
             PLATFORM=linux/amd64,linux/arm64 \
             PUSH=true \
             kernel initramfs
           echo "##### Making imager #####"
           make \
-            PKG_KERNEL=${{ env.REGISTRY }}/${{ github.actor }}/kernel:${{ inputs.talos_version }}-${{ inputs.device }} \
+            PKG_KERNEL="${REGISTRY}/${USERNAME,,}/kernel:${TALOS_VERSION}-${DEVICE}" \
             INSTALLER_ARCH=all \
             PLATFORM=linux/amd64,linux/arm64 \
             PUSH=true \
@@ -299,8 +301,9 @@ jobs:
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
           PKGS_PREFIX: ${{ env.REGISTRY }}/${{ github.actor }}
           PKGS: ${{ inputs.talos_version }}-${{ inputs.device }}
+          DIRECTORY: ${{ github.workspace }}/_make/overlay
         run: |
-          pushd ${{ github.workspace }}/_make/overlay
+          pushd "${DIRECTORY}"
           echo "##### Making overlay #####"
           make \
             PUSH=true \
