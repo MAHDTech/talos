@@ -84,10 +84,9 @@ jobs:
         name: Delete old packages
         uses: smartsquaregmbh/delete-old-packages@v0.8.0
         with:
+          type: container
           user: ${{ env.USER }}
-          type: docker
           keep: 3
           token: ${{ secrets.PAT_PACKAGES }}
           dry-run: true
-          names: |
-            ${{ steps.get_package_names.outputs.package_names }}
+          names: ${{ steps.get_package_names.outputs.package_names }}
