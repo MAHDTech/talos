@@ -241,17 +241,6 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
-          echo "##### Making rekres #####"
-          make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
-            PKGS="${TALOS_VERSION}-${DEVICE}" \
-            PUSH=true \
-            rekres
-
           echo "##### Making installer #####"
           make \
             GITHUB_TOKEN="${GITHUB_TOKEN}" \

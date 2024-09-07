@@ -25,14 +25,19 @@ runs:
     - id: imager_pull
       name: Pull imager image
       shell: bash
+      env:
+        IMAGER_IMAGE: ${{ inputs.imager_image }}
       run: |
-        docker pull ${IMAGER_IMAGE}
+        docker image pull "${IMAGER_IMAGE}"
 
     - id: imager_run
       name: Run imager
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
+        IMAGER_IMAGE: ${{ inputs.imager_image }}
+        OVERLAY_NAME: ${{ inputs.overlay_name }}
+        OVERLAY_IMAGE: ${{ inputs.overlay_image }}
       run: |
         docker run \
           --name imager \
@@ -42,8 +47,8 @@ runs:
           --volume /dev:/dev \
           --volume $PWD/_out:/out \
           --privileged \
-          ${{ inputs.imager_image }} \
-            ${{ inputs.overlay_name }} \
+          "${IMAGER_IMAGE,,}" \
+            "${OVERLAY_NAME}" \
             --arch arm64 \
-            --overlay-name=${{ inputs.overlay_name }} \
-            --overlay-image=${{ inputs.overlay_image }}
+            --overlay-name="${OVERLAY_NAME}" \
+            --overlay-image="${OVERLAY_IMAGE}"
