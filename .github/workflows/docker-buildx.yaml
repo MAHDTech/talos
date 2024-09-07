@@ -18,7 +18,7 @@ on:
         description: "The password to login to the registry"
 
 jobs:
-  common_steps:
+  docker_buildx:
     runs-on: ubuntu-latest
     steps:
       - id: dependencies

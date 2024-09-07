@@ -18,7 +18,7 @@ on:
         description: "The path to clone the repository to"
 
 jobs:
-  common_steps:
+  make:
     runs-on: ubuntu-latest
     steps:
       - id: checkout_repository_make
