@@ -35,29 +35,3 @@ updates:
       prefix: "github-actions"
     rebase-strategy: "auto"
     open-pull-requests-limit: 5
-
-  #########################
-  # Git Submodules
-  #########################
-
-  - package-ecosystem: "gitsubmodule"
-    directories:
-      - "/"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-      time: "00:00"
-      timezone: "Australia/Sydney"
-    assignees:
-      - "MAHDTech"
-    reviewers:
-      - "MAHDTech"
-    labels:
-      - "dependencies"
-      - "dependabot"
-      - "submodules"
-    target-branch: "trunk"
-    commit-message:
-      prefix: "gitsubmodules"
-    rebase-strategy: "auto"
-    open-pull-requests-limit: 5
