@@ -28,6 +28,8 @@ runs:
     - id: imager_run
       name: Run imager
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         docker run \
           --name imager \
