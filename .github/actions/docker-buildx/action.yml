@@ -31,3 +31,7 @@ runs:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
+
+    - id: setup_crane
+      name: Set up Crane
+      uses: imjasonh/setup-crane@v0.4

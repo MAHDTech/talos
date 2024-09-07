@@ -5,11 +5,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "0 0 * * *"
-
-  push:
-    branches:
-      - trunk
+    - cron: "0 0 1 * *"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -79,3 +75,9 @@ jobs:
           token: ${{ secrets.PAT_PACKAGES }}
           dry-run: false
           names: ${{ steps.get_package_names.outputs.package_names }}
+
+      - id: clear_cache
+        name: Clear Actions Cache
+        uses: easimon/wipe-cache@main
+        with:
+          dry-run: false

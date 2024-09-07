@@ -120,7 +120,6 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
         uses: ./.github/actions/docker-buildx
@@ -129,7 +128,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Setup Make.
       - id: make
         name: Setup and run Make
         uses: ./.github/actions/setup_make
@@ -138,7 +136,16 @@ jobs:
           branch: ${{ inputs.branch_packages }}
           path: ${{ github.workspace }}/_make/packages
 
-      # Make Packages
+      - id: cache
+        name: Cache (kernel)
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-buildx-packages-kernel
+          path: ${{ github.workspace }}/_make/packages/kernel/build
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+          save-always: true
+
       - id: make_packages
         name: Make packages
         env:
@@ -181,7 +188,8 @@ jobs:
   base:
     name: Base
 
-    needs: packages
+    needs:
+      - packages
 
     timeout-minutes: 1440
     continue-on-error: false
@@ -199,7 +207,6 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
         uses: ./.github/actions/docker-buildx
@@ -208,7 +215,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Setup Make.
       - id: make
         name: Setup and run Make
         uses: ./.github/actions/setup_make
@@ -217,7 +223,16 @@ jobs:
           branch: ${{ inputs.branch_base }}
           path: ${{ github.workspace }}/_make/base
 
-      # Make Base
+      - id: cache
+        name: Cache (base)
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-buildx-base
+          path: ${{ github.workspace }}/_make/base
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+          save-always: true
+
       - id: make_base
         name: Make base
         env:
@@ -287,7 +302,6 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
         uses: ./.github/actions/docker-buildx
@@ -296,7 +310,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Setup Make.
+      - id: cache
+        name: Cache (overlay)
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-buildx-overlay
+          path: ${{ github.workspace }}/_make/overlay
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+          save-always: true
+
       - id: make
         name: Setup and run Make
         uses: ./.github/actions/setup_make
@@ -305,7 +328,6 @@ jobs:
           branch: ${{ inputs.branch_overlay }}
           path: ${{ github.workspace }}/_make/overlay
 
-      # Make Overlay
       - id: make_overlay
         name: Make overlay
         env:
@@ -355,7 +377,6 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Docker Buildx.
       - id: docker_buildx
         name: Setup Docker Buildx
         uses: ./.github/actions/docker-buildx
@@ -364,7 +385,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Setup Make.
+      - id: cache
+        name: Cache (overlay)
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-buildx-overlay
+          path: ${{ github.workspace }}/_make/overlay
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+          save-always: true
+
       - id: make
         name: Setup and run Make
         uses: ./.github/actions/setup_make
@@ -373,7 +403,6 @@ jobs:
           branch: ${{ inputs.branch_overlay }}
           path: ${{ github.workspace }}/_make/overlay
 
-      # Run imager
       - id: imager
         name: Run imager
         uses: ./.github/actions/imager
@@ -383,14 +412,14 @@ jobs:
           overlay_name: ${{ inputs.device }}
           overlay_image: ${{ env.REGISTRY }}/${{ github.actor }}/sbc-rockchip:${{ inputs.talos_version }}-${{ inputs.device }}
 
-      # Upload artifacts
       - id: upload_artifacts
         name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          if-no-files-found: error
           name: ${{ inputs.device }}-${{ inputs.talos_version }}
-          path: ${{ github.workspace }}/_make/overlay/_out/metal-arm64.raw.xz
+          path: ${{ github.workspace }}/_make/overlay/_out/metal-${{ inputs.device }}-arm64.raw.xz
+          if-no-files-found: error
+          retention-days: 1
 
   ##################################################
   # Release
@@ -470,5 +499,11 @@ jobs:
 
             Device name: ${{ inputs.device }}
             Talos version: ${{ inputs.talos_version }}
+
+            ```bash
+            talosctl upgrade \
+              --nodes <your_nodes> \
+              --image ${{ env.REGISTRY }}/${{ github.actor }}/installer:${{ inputs.talos_version }}-${{ inputs.device }}
+            ```
 
           files: ${{ github.workspace }}/_artifacts/${{ inputs.device }}-${{ inputs.talos_version }}

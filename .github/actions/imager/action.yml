@@ -21,11 +21,13 @@ runs:
   steps:
     - id: imager_pull
       name: Pull imager image
+      shell: bash
       run: |
         docker pull ${IMAGER_IMAGE}
 
     - id: imager_run
       name: Run imager
+      shell: bash
       run: |
         docker run \
           --name imager \
@@ -36,7 +38,7 @@ runs:
           --volume $PWD/_out:/out \
           --privileged \
           ${{ inputs.imager_image }} \
-          ${{ inputs.overlay_name }} \
-          --arch arm64 \
-          --overlay-image=${{ inputs.overlay_image }} \
-          --overlay-name=${{ inputs.overlay_name }}
+            ${{ inputs.overlay_name }} \
+            --arch arm64 \
+            --overlay-name=${{ inputs.overlay_name }} \
+            --overlay-image=${{ inputs.overlay_image }}
