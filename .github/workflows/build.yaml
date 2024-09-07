@@ -77,6 +77,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  actions: write
   contents: write
   packages: write
   pull-requests: read
@@ -126,11 +127,11 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PAT_PACKAGES }}
 
       - id: make
         name: Setup and run Make
-        uses: ./.github/actions/setup_make
+        uses: ./.github/actions/make
         with:
           repository: ${{ inputs.repo_packages }}
           branch: ${{ inputs.branch_packages }}
@@ -149,7 +150,7 @@ jobs:
       - id: make_packages
         name: Make packages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
           TALOS_VERSION: ${{ inputs.talos_version }}
           DEVICE: ${{ inputs.device }}
           REGISTRY: ${{ env.REGISTRY }}
@@ -215,30 +216,20 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PAT_PACKAGES }}
 
       - id: make
         name: Setup and run Make
-        uses: ./.github/actions/setup_make
+        uses: ./.github/actions/make
         with:
           repository: ${{ inputs.repo_base }}
           branch: ${{ inputs.branch_base }}
           path: ${{ github.workspace }}/_make/base
 
-      - id: cache
-        name: Cache (base)
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-buildx-base
-          path: ${{ github.workspace }}/_make/base
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-          save-always: true
-
       - id: make_base
         name: Make base
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
           TALOS_VERSION: ${{ inputs.talos_version }}
           DEVICE: ${{ inputs.device }}
           REGISTRY: ${{ env.REGISTRY }}
@@ -253,6 +244,8 @@ jobs:
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
+            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
+            PKGS="${TALOS_VERSION}-${DEVICE}" \
             PUSH=true \
             installer
 
@@ -261,6 +254,8 @@ jobs:
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
+            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
+            PKGS="${TALOS_VERSION}-${DEVICE}" \
             PUSH=true \
             talosctl-image
 
@@ -324,21 +319,11 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: cache
-        name: Cache (overlay)
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-buildx-overlay
-          path: ${{ github.workspace }}/_make/overlay
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-          save-always: true
+          password: ${{ secrets.PAT_PACKAGES }}
 
       - id: make
         name: Setup and run Make
-        uses: ./.github/actions/setup_make
+        uses: ./.github/actions/make
         with:
           repository: ${{ inputs.repo_overlay }}
           branch: ${{ inputs.branch_overlay }}
@@ -347,7 +332,7 @@ jobs:
       - id: make_overlay
         name: Make overlay
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
           TALOS_VERSION: ${{ inputs.talos_version }}
           DEVICE: ${{ inputs.device }}
           REGISTRY: ${{ env.REGISTRY }}
@@ -404,21 +389,11 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: cache
-        name: Cache (overlay)
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-buildx-overlay
-          path: ${{ github.workspace }}/_make/overlay
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-          save-always: true
+          password: ${{ secrets.PAT_PACKAGES }}
 
       - id: make
         name: Setup and run Make
-        uses: ./.github/actions/setup_make
+        uses: ./.github/actions/make
         with:
           repository: ${{ inputs.repo_overlay }}
           branch: ${{ inputs.branch_overlay }}
