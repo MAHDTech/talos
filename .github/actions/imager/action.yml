@@ -3,6 +3,9 @@ name: Imager
 description: "A composite action to run imager"
 
 inputs:
+  token:
+    required: true
+    description: "The token to use"
   workdir:
     required: true
     description: "The working directory to use"
@@ -29,7 +32,7 @@ runs:
       name: Run imager
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.token }}
       run: |
         docker run \
           --name imager \

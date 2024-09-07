@@ -239,6 +239,16 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
+          echo "##### Making rekres #####"
+          make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
+            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
+            PKGS="${TALOS_VERSION}-${DEVICE}" \
+            PUSH=true \
+            rekres
+
           echo "##### Making installer #####"
           make \
             USERNAME="${USERNAME,,}" \
@@ -349,6 +359,8 @@ jobs:
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
+            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
+            PKGS="${TALOS_VERSION}-${DEVICE}" \
             PUSH=true \
             all
 
@@ -403,6 +415,7 @@ jobs:
         name: Run imager
         uses: ./.github/actions/imager
         with:
+          token: ${{ secrets.PAT_PACKAGES }}
           workdir: ${{ github.workspace }}/_make/overlay
           imager_image: ${{ env.REGISTRY }}/${{ github.actor }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
           overlay_name: ${{ inputs.device }}
