@@ -16,6 +16,13 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - id: dependencies
+      name: Dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+
     - id: setup_qemu
       name: Set up QEMU
       uses: docker/setup-qemu-action@v3
