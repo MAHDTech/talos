@@ -52,7 +52,7 @@ jobs:
             -t \
             --env GITHUB_TOKEN \
             --volume /dev:/dev \
-            --volume "$(pwd)/_out:/out" \
+            --mount type=bind,source="$(pwd)"/_out,target=/out \
             --privileged \
             "${IMAGER_IMAGE,,}" \
               "${OVERLAY_NAME}" \
