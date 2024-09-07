@@ -123,7 +123,7 @@ jobs:
 
       - id: docker_buildx
         name: Setup Docker Buildx
-        uses: ./github/workflows/steps/docker-buildx.yaml
+        uses: ./.github/workflows/steps/docker-buildx.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -131,7 +131,7 @@ jobs:
 
       - id: make
         name: Setup and run Make
-        uses: ./github/workflows/steps/make.yaml
+        uses: ./.github/workflows/steps/make.yaml
         with:
           repository: ${{ inputs.repo_packages }}
           branch: ${{ inputs.branch_packages }}
@@ -223,7 +223,7 @@ jobs:
 
       - id: docker_buildx
         name: Setup Docker Buildx
-        uses: ./github/workflows/steps/docker-buildx.yaml
+        uses: ./.github/workflows/steps/docker-buildx.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -231,7 +231,7 @@ jobs:
 
       - id: make
         name: Setup and run Make
-        uses: ./github/workflows/steps/make.yaml
+        uses: ./.github/workflows/steps/make.yaml
         with:
           repository: ${{ inputs.repo_base }}
           branch: ${{ inputs.branch_base }}
@@ -327,7 +327,7 @@ jobs:
 
       - id: docker_buildx
         name: Setup Docker Buildx
-        uses: ./github/workflows/steps/docker-buildx.yaml
+        uses: ./.github/workflows/steps/docker-buildx.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -335,7 +335,7 @@ jobs:
 
       - id: make
         name: Setup and run Make
-        uses: ./github/workflows/steps/make.yaml
+        uses: ./.github/workflows/steps/make.yaml
         with:
           repository: ${{ inputs.repo_overlay }}
           branch: ${{ inputs.branch_overlay }}
@@ -400,7 +400,7 @@ jobs:
 
       - id: docker_buildx
         name: Setup Docker Buildx
-        uses: ./github/workflows/steps/docker-buildx.yaml
+        uses: ./.github/workflows/steps/docker-buildx.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -408,7 +408,7 @@ jobs:
 
       - id: make
         name: Setup and run Make
-        uses: ./github/workflows/steps/make.yaml
+        uses: ./.github/workflows/steps/make.yaml
         with:
           repository: ${{ inputs.repo_overlay }}
           branch: ${{ inputs.branch_overlay }}
