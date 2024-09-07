@@ -52,3 +52,7 @@ runs:
         CRANE_PASSWORD: ${{ inputs.password }}
       run: |
         echo "${CRANE_PASSWORD}" | crane auth login ${CRANE_REGISTRY,,} --username ${CRANE_USERNAME} --password-stdin
+
+    - id: github_runtime
+      name: Expose GitHub Runtime
+      uses: crazy-max/ghaction-github-runtime@v3

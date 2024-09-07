@@ -1,0 +1,37 @@
+---
+name: Make
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        type: string
+        required: true
+        description: "The repository to clone"
+      branch:
+        type: string
+        required: true
+        description: "The branch to checkout"
+      path:
+        type: string
+        required: true
+        description: "The path to clone the repository to"
+
+jobs:
+  common_steps:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout_repository_make
+        name: Checkout repository for make
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.branch }}
+          path: ${{ inputs.path }}
+
+      - id: install_dependencies
+        name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install -y make
