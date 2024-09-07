@@ -192,9 +192,8 @@ jobs:
   base:
     name: Base
 
-    #needs: []
-    # TODO: remove comment when testing is done.
-    #  - packages
+    needs:
+      - packages
 
     timeout-minutes: 1440
     continue-on-error: false
@@ -296,10 +295,9 @@ jobs:
   overlay:
     name: Overlay
 
-    #needs: []
-    # TODO: remove comment when testing is done.
-    #  - packages
-    #  - base
+    needs:
+      - packages
+      - base
 
     timeout-minutes: 1440
     continue-on-error: false
@@ -369,11 +367,10 @@ jobs:
   boot:
     name: Boot
 
-    #needs: []
-    # TODO: remove comment when testing is done.
-    #  - packages
-    #  - base
-    #  - overlay
+    needs:
+      - packages
+      - base
+      - overlay
 
     timeout-minutes: 1440
     continue-on-error: false
