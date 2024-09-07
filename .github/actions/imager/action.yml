@@ -28,7 +28,7 @@ runs:
       env:
         IMAGER_IMAGE: ${{ inputs.imager_image }}
       run: |
-        docker image pull "${IMAGER_IMAGE}"
+        docker image pull "${IMAGER_IMAGE,,}"
 
     - id: imager_run
       name: Run imager
