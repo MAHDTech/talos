@@ -250,25 +250,37 @@ jobs:
 
           echo "##### Making installer #####"
           make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PUSH=true \
             installer
 
           echo "##### Making talosctl-image #####"
           make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PUSH=true \
             talosctl-image
 
           echo "##### Making kernel initramfs #####"
           make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
             PKGS="${TALOS_VERSION}-${DEVICE}" \
-            INSTALLER_ARCH=all \
             PLATFORM=linux/amd64,linux/arm64 \
+            INSTALLER_ARCH=all \
             PUSH=true \
             kernel initramfs
 
           echo "##### Making imager #####"
           make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
             PKGS="${TALOS_VERSION}-${DEVICE}" \
             INSTALLER_ARCH=all \
@@ -349,6 +361,9 @@ jobs:
 
           echo "##### Making overlay #####"
           make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
             PUSH=true \
             all
 
