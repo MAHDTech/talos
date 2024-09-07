@@ -160,6 +160,8 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
+          export GITHUB_TOKEN
+
           echo "##### Making kernel config #####"
           make \
             USERNAME="${USERNAME,,}" \
@@ -167,7 +169,6 @@ jobs:
 
           echo "##### Making packages (kernel)#####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
@@ -177,7 +178,6 @@ jobs:
 
           echo "##### Making packages (all) #####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
@@ -241,9 +241,10 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
+          export GITHUB_TOKEN
+
           echo "##### Making installer #####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
@@ -254,7 +255,6 @@ jobs:
 
           echo "##### Making talosctl-image #####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
@@ -265,7 +265,6 @@ jobs:
 
           echo "##### Making kernel initramfs #####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
@@ -278,7 +277,6 @@ jobs:
 
           echo "##### Making imager #####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
@@ -350,9 +348,10 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
+          export GITHUB_TOKEN
+
           echo "##### Making overlay #####"
           make \
-            GITHUB_TOKEN="${GITHUB_TOKEN}" \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \
             TAG="${TAG}" \
