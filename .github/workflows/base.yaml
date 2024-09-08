@@ -101,8 +101,6 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
-          export GITHUB_TOKEN
-
           echo "##### Making installer #####"
           make \
             USERNAME="${USERNAME,,}" \

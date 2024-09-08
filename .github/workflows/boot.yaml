@@ -75,7 +75,7 @@ jobs:
         name: Pull imager image
         shell: bash
         env:
-          IMAGE_IMAGE: ${{ inputs.registry }}/${{ inputs.username }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
+          IMAGER_IMAGE: ${{ inputs.registry }}/${{ inputs.username }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
         run: |
           docker image pull "${IMAGER_IMAGE,,}"
 

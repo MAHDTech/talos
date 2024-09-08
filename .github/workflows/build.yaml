@@ -128,8 +128,8 @@ jobs:
     with:
       registry: ghcr.io
       username: ${{ github.actor }}
-      repository: ${{ inputs.repo_packages }}
-      branch: ${{ inputs.branch_packages }}
+      repository: ${{ inputs.repo_base }}
+      branch: ${{ inputs.branch_base }}
       path: _make/base
       talos_version: ${{ inputs.talos_version }}
       device: ${{ inputs.device }}

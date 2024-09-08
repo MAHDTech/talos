@@ -108,14 +108,12 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
-          export GITHUB_TOKEN
-
           echo "##### Making kernel config #####"
           make \
             USERNAME="${USERNAME,,}" \
             kernel-olddefconfig
 
-          echo "##### Making packages (kernel)#####"
+          echo "##### Making packages (kernel) #####"
           make \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \

@@ -110,8 +110,6 @@ jobs:
         run: |
           pushd "${DIRECTORY}"
 
-          export GITHUB_TOKEN
-
           echo "##### Making overlay #####"
           make \
             USERNAME="${USERNAME,,}" \
