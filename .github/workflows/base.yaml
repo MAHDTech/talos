@@ -12,14 +12,6 @@ on:
         type: string
         required: true
         description: "The username to login to the registry"
-      password:
-        type: string
-        required: true
-        description: "The password to login to the registry"
-      token:
-        type: string
-        required: true
-        description: "The token to use to authenticate with to GitHub"
       repository:
         type: string
         required: true
@@ -72,7 +64,7 @@ jobs:
         with:
           registry: ${{ inputs.registry }}
           username: ${{ inputs.username }}
-          password: ${{ inputs.password }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: crane_setup
         name: Set up Crane
@@ -84,7 +76,7 @@ jobs:
         env:
           CRANE_REGISTRY: ${{ inputs.registry }}
           CRANE_USERNAME: ${{ inputs.username }}
-          CRANE_PASSWORD: ${{ inputs.password }}
+          CRANE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "${CRANE_PASSWORD}" | crane auth login "${CRANE_REGISTRY,,}" --username "${CRANE_USERNAME}" --password-stdin
 
@@ -99,13 +91,13 @@ jobs:
       - id: make_base
         name: Make base
         env:
-          GITHUB_TOKEN: ${{ inputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TALOS_VERSION: ${{ inputs.talos_version }}
           DEVICE: ${{ inputs.device }}
           REGISTRY: ${{ inputs.registry }}
           USERNAME: ${{ inputs.username }}
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ github.workspace }}/_make/base
+          DIRECTORY: ${{ inputs.path }}
         run: |
           pushd "${DIRECTORY}"
 

@@ -12,14 +12,6 @@ on:
         type: string
         required: true
         description: "The username to login to the registry"
-      password:
-        type: string
-        required: true
-        description: "The password to login to the registry"
-      token:
-        type: string
-        required: true
-        description: "The token to use to authenticate with to GitHub"
       repository:
         type: string
         required: true
@@ -47,10 +39,17 @@ jobs:
 
     runs-on: self-hosted
 
+    timeout-minutes: 1440
+    continue-on-error: false
+
     strategy:
       fail-fast: true
 
     steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
       - id: dependencies
         name: Dependencies
         shell: bash
@@ -72,7 +71,7 @@ jobs:
         with:
           registry: ${{ inputs.registry }}
           username: ${{ inputs.username }}
-          password: ${{ inputs.password }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: crane_setup
         name: Set up Crane
@@ -84,11 +83,11 @@ jobs:
         env:
           CRANE_REGISTRY: ${{ inputs.registry }}
           CRANE_USERNAME: ${{ inputs.username }}
-          CRANE_PASSWORD: ${{ inputs.password }}
+          CRANE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "${CRANE_PASSWORD}" | crane auth login "${CRANE_REGISTRY,,}" --username "${CRANE_USERNAME}" --password-stdin
 
-      - id: checkout_repository
+      - id: checkout_repository_make
         name: Checkout repository for make
         uses: actions/checkout@v4
         with:
@@ -96,15 +95,36 @@ jobs:
           ref: ${{ inputs.branch }}
           path: ${{ inputs.path }}
 
-      - id: imager
+      - id: imager_pull
+        name: Pull imager image
+        shell: bash
+        env:
+          IMAGE_IMAGE: ${{ inputs.registry }}/${{ inputs.username }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
+        run: |
+          docker image pull "${IMAGER_IMAGE,,}"
+
+      - id: imager_run
         name: Run imager
-        uses: ./.github/actions/imager
-        with:
-          token: ${{ inputs.token }}
-          workdir: ${{ github.workspace }}/_make/overlay
-          imager_image: ${{ inputs.registry }}/${{ inputs.username }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
-          overlay_name: ${{ inputs.device }}
-          overlay_image: ${{ inputs.registry }}/${{ inputs.username }}/sbc-rockchip:${{ inputs.talos_version }}-${{ inputs.device }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGER_IMAGE: ${{ inputs.registry }}/${{ inputs.username }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
+          OVERLAY_NAME: ${{ inputs.device }}
+          OVERLAY_IMAGE: ${{ inputs.registry }}/${{ inputs.username }}/sbc-rockchip:${{ inputs.talos_version }}-${{ inputs.device }}
+        run: |
+          docker run \
+            --name imager \
+            --rm \
+            -t \
+            --env GITHUB_TOKEN \
+            --volume /dev:/dev \
+            --mount type=bind,source="$(pwd)"/_out,target=/out \
+            --privileged \
+            "${IMAGER_IMAGE,,}" \
+              "${OVERLAY_NAME}" \
+              --arch arm64 \
+              --overlay-name="${OVERLAY_NAME}" \
+              --overlay-image="${OVERLAY_IMAGE}"
 
       - id: upload_artifacts
         name: Upload artifacts
