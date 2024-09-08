@@ -123,6 +123,8 @@ jobs:
 
   packages:
     name: Packages
+    needs:
+      - check
     uses: ./.github/workflows/packages.yaml
     secrets: inherit
     with:
@@ -141,6 +143,7 @@ jobs:
   base:
     name: Base
     needs:
+      - check
       - packages
     uses: ./.github/workflows/base.yaml
     secrets: inherit
@@ -160,6 +163,7 @@ jobs:
   overlay:
     name: Overlay
     needs:
+      - check
       - packages
       - base
     uses: ./.github/workflows/overlay.yaml
@@ -180,6 +184,7 @@ jobs:
   boot:
     name: Boot
     needs:
+      - check
       - packages
       - base
       - overlay
@@ -201,6 +206,7 @@ jobs:
     if: ${{ github.event.inputs.release == 'true' }}
 
     needs:
+      - check
       - packages
       - base
       - overlay
