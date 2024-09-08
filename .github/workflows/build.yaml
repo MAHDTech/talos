@@ -246,7 +246,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ inputs.device }} v${{ steps.calver.outputs.package_version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_PACKAGES }}
           tag_name: ${{ steps.calver.outputs.package_version }}
           prerelease: false
           generate_release_notes: true
