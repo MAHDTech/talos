@@ -121,79 +121,19 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: docker_buildx
-        name: Setup Docker Buildx
-        uses: ./.github/workflows/docker-buildx.yaml
+      - id: packages
+        name: Packages
+        uses: ./.github/workflows/packages.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.PAT_PACKAGES }}
-
-      - id: make
-        name: Setup and run Make
-        uses: ./.github/workflows/make.yaml
-        with:
+          token: ${{ secrets.PAT_PACKAGES }}
           repository: ${{ inputs.repo_packages }}
           branch: ${{ inputs.branch_packages }}
           path: ${{ github.workspace }}/_make/packages
-
-      - id: cache_kernel
-        name: Cache (kernel)
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-buildx-kernel-${{ hashFiles('_make/packages/kernel/*') }}
-          path: kernel-build
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-          save-always: true
-
-      - id: cache_buildx
-        name: Cache (buildx)
-        uses: reproducible-containers/buildkit-cache-dance@v3
-        with:
-          cache-map: |
-            {
-              "kernel-build": "/kernel/build"
-            }
-          skip-extraction: ${{ steps.cache_kernel.outputs.cache-hit }}
-
-      - id: make_packages
-        name: Make packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
-          TALOS_VERSION: ${{ inputs.talos_version }}
-          DEVICE: ${{ inputs.device }}
-          REGISTRY: ${{ env.REGISTRY }}
-          USERNAME: ${{ github.actor }}
-          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ github.workspace }}/_make/packages
-        run: |
-          pushd "${DIRECTORY}"
-
-          export GITHUB_TOKEN
-
-          echo "##### Making kernel config #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            kernel-olddefconfig
-
-          echo "##### Making packages (kernel)#####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PLATFORM=linux/amd64,linux/arm64 \
-            PUSH=true \
-            kernel
-
-          echo "##### Making packages (all) #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PLATFORM=linux/amd64,linux/arm64 \
-            PUSH=true
-          popd
+          talos_version: ${{ inputs.talos_version }}
+          device: ${{ inputs.device }}
 
   ##################################################
   # Base
@@ -221,82 +161,19 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: docker_buildx
-        name: Setup Docker Buildx
-        uses: ./.github/workflows/docker-buildx.yaml
+      - id: base
+        name: Base
+        uses: ./.github/workflows/base.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.PAT_PACKAGES }}
-
-      - id: make
-        name: Setup and run Make
-        uses: ./.github/workflows/make.yaml
-        with:
-          repository: ${{ inputs.repo_base }}
-          branch: ${{ inputs.branch_base }}
+          token: ${{ secrets.PAT_PACKAGES }}
+          repository: ${{ inputs.repo_packages }}
+          branch: ${{ inputs.branch_packages }}
           path: ${{ github.workspace }}/_make/base
-
-      - id: make_base
-        name: Make base
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
-          TALOS_VERSION: ${{ inputs.talos_version }}
-          DEVICE: ${{ inputs.device }}
-          REGISTRY: ${{ env.REGISTRY }}
-          USERNAME: ${{ github.actor }}
-          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ github.workspace }}/_make/base
-        run: |
-          pushd "${DIRECTORY}"
-
-          export GITHUB_TOKEN
-
-          echo "##### Making installer #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
-            PKGS="${TALOS_VERSION}-${DEVICE}" \
-            PUSH=true \
-            installer
-
-          echo "##### Making talosctl-image #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
-            PKGS="${TALOS_VERSION}-${DEVICE}" \
-            PUSH=true \
-            talosctl-image
-
-          echo "##### Making kernel initramfs #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
-            PKGS="${TALOS_VERSION}-${DEVICE}" \
-            PLATFORM=linux/amd64,linux/arm64 \
-            INSTALLER_ARCH=all \
-            PUSH=true \
-            kernel initramfs
-
-          echo "##### Making imager #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
-            PKGS="${TALOS_VERSION}-${DEVICE}" \
-            INSTALLER_ARCH=all \
-            PLATFORM=linux/amd64,linux/arm64 \
-            PUSH=true \
-            imager
-
-          popd
+          talos_version: ${{ inputs.talos_version }}
+          device: ${{ inputs.device }}
 
   ##################################################
   # Overlay
@@ -325,50 +202,19 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: docker_buildx
-        name: Setup Docker Buildx
-        uses: ./.github/workflows/docker-buildx.yaml
+      - id: overlay
+        name: Overlay
+        uses: ./.github/workflows/overlay.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.PAT_PACKAGES }}
-
-      - id: make
-        name: Setup and run Make
-        uses: ./.github/workflows/make.yaml
-        with:
+          token: ${{ secrets.PAT_PACKAGES }}
           repository: ${{ inputs.repo_overlay }}
           branch: ${{ inputs.branch_overlay }}
           path: ${{ github.workspace }}/_make/overlay
-
-      - id: make_overlay
-        name: Make overlay
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
-          TALOS_VERSION: ${{ inputs.talos_version }}
-          DEVICE: ${{ inputs.device }}
-          REGISTRY: ${{ env.REGISTRY }}
-          USERNAME: ${{ github.actor }}
-          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          PKGS_PREFIX: ${{ env.REGISTRY }}/${{ github.actor }}
-          PKGS: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ github.workspace }}/_make/overlay
-        run: |
-          pushd "${DIRECTORY}"
-
-          export GITHUB_TOKEN
-
-          echo "##### Making overlay #####"
-          make \
-            USERNAME="${USERNAME,,}" \
-            REGISTRY="${REGISTRY}" \
-            TAG="${TAG}" \
-            PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
-            PKGS="${TALOS_VERSION}-${DEVICE}" \
-            PUSH=true \
-            all
-
-          popd
+          talos_version: ${{ inputs.talos_version }}
+          device: ${{ inputs.device }}
 
   ##################################################
   # Boot
@@ -398,40 +244,19 @@ jobs:
         name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: docker_buildx
-        name: Setup Docker Buildx
-        uses: ./.github/workflows/docker-buildx.yaml
+      - id: boot
+        name: Boot
+        uses: ./.github/workflows/boot.yaml
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.PAT_PACKAGES }}
-
-      - id: make
-        name: Setup and run Make
-        uses: ./.github/workflows/make.yaml
-        with:
+          token: ${{ secrets.PAT_PACKAGES }}
           repository: ${{ inputs.repo_overlay }}
           branch: ${{ inputs.branch_overlay }}
           path: ${{ github.workspace }}/_make/overlay
-
-      - id: imager
-        name: Run imager
-        uses: ./.github/actions/imager
-        with:
-          token: ${{ secrets.PAT_PACKAGES }}
-          workdir: ${{ github.workspace }}/_make/overlay
-          imager_image: ${{ env.REGISTRY }}/${{ github.actor }}/imager:${{ inputs.talos_version }}-${{ inputs.device }}
-          overlay_name: ${{ inputs.device }}
-          overlay_image: ${{ env.REGISTRY }}/${{ github.actor }}/sbc-rockchip:${{ inputs.talos_version }}-${{ inputs.device }}
-
-      - id: upload_artifacts
-        name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.device }}-${{ inputs.talos_version }}
-          path: ${{ github.workspace }}/_make/overlay/_out/metal-${{ inputs.device }}-arm64.raw.xz
-          if-no-files-found: error
-          retention-days: 1
+          talos_version: ${{ inputs.talos_version }}
+          device: ${{ inputs.device }}
 
   ##################################################
   # Release
