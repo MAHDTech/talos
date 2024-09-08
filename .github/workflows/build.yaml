@@ -102,7 +102,7 @@ jobs:
   ##################################################
 
   packages:
-    name: Make Packages
+    name: Packages
     uses: ./.github/workflows/packages.yaml
     secrets: inherit
     with:
@@ -119,9 +119,10 @@ jobs:
   ##################################################
 
   base:
-    name: Make Base
-    needs:
-      - packages
+    name: Base
+    # TODO: Remove when testing is complete
+    #needs:
+    #  - packages
     uses: ./.github/workflows/base.yaml
     secrets: inherit
     with:
@@ -138,10 +139,11 @@ jobs:
   ##################################################
 
   overlay:
-    name: Make Overlay
-    needs:
-      - packages
-      - base
+    name: Overlay
+    # TODO: Remove when testing is complete
+    #needs:
+    #  - packages
+    #  - base
     uses: ./.github/workflows/overlay.yaml
     secrets: inherit
     with:
@@ -158,19 +160,17 @@ jobs:
   ##################################################
 
   boot:
-    name: Make Boot
-    needs:
-      - packages
-      - base
-      - overlay
+    name: Boot
+    # TODO: Remove when testing is complete
+    #needs:
+    #  - packages
+    #  - base
+    #  - overlay
     uses: ./.github/workflows/boot.yaml
     secrets: inherit
     with:
       registry: ghcr.io
       username: ${{ github.actor }}
-      repository: ${{ inputs.repo_overlay }}
-      branch: ${{ inputs.branch_overlay }}
-      path: _make/boot
       talos_version: ${{ inputs.talos_version }}
       device: ${{ inputs.device }}
 
@@ -196,13 +196,18 @@ jobs:
         name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.device }}-${{ inputs.talos_version }}
           path: ${{ github.workspace }}/_artifacts
 
-      - id: show_artifacts
-        name: Show artifacts
+      - id: rename_artifacts
+        name: Rename artifacts
         run: |
-          ls -lah ${{ github.workspace }}/_artifacts
+          pushd ${{ github.workspace }}/_artifacts
+          ls -lah
+          echo "Renaming ${{ inputs.device }} image"
+          mv \
+            metal-arm64.raw.xz \
+            ${{ inputs.device }}-${{ inputs.talos_version }}.raw.xz
+          popd
 
       - id: calver
         name: Set Calver Version
@@ -247,6 +252,7 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           append_body: true
+          files: ${{ github.workspace }}/_artifacts/**
           body: |
             ## Images
 
@@ -258,5 +264,3 @@ jobs:
               --nodes <your_nodes> \
               --image ghcr.io/${{ github.actor }}/installer:${{ inputs.talos_version }}-${{ inputs.device }}
             ```
-
-          files: ${{ github.workspace }}/_artifacts/${{ inputs.device }}-${{ inputs.talos_version }}

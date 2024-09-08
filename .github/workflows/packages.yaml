@@ -35,7 +35,7 @@ on:
 
 jobs:
   packages:
-    name: Build Packages
+    name: Make Packages
 
     runs-on: self-hosted
 
@@ -104,7 +104,7 @@ jobs:
           REGISTRY: ${{ inputs.registry }}
           USERNAME: ${{ inputs.username }}
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ inputs.path }}
+          DIRECTORY: ${{ github.workspace }}/${{ inputs.path }}
         run: |
           pushd "${DIRECTORY}"
 

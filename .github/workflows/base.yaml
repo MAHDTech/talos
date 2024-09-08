@@ -35,7 +35,7 @@ on:
 
 jobs:
   base:
-    name: Build Base
+    name: Make Base
 
     runs-on: self-hosted
 
@@ -86,7 +86,7 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.branch }}
-          path: ${{ inputs.path }}
+          path: ${{ github.workspace }}/${{ inputs.path }}
 
       - id: make_base
         name: Make base
@@ -97,7 +97,7 @@ jobs:
           REGISTRY: ${{ inputs.registry }}
           USERNAME: ${{ inputs.username }}
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ inputs.path }}
+          DIRECTORY: ${{ github.workspace }}/${{ inputs.path }}
         run: |
           pushd "${DIRECTORY}"
 

@@ -35,7 +35,7 @@ on:
 
 jobs:
   overlay:
-    name: Build Overlay
+    name: Make Overlay
 
     runs-on: self-hosted
 
@@ -93,7 +93,7 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.branch }}
-          path: ${{ inputs.path }}
+          path: ${{ github.workspace }}/${{ inputs.path }}
 
       - id: make_overlay
         name: Make overlay
@@ -106,7 +106,7 @@ jobs:
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
           PKGS_PREFIX: ${{ inputs.registry }}/${{ inputs.username }}
           PKGS: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ inputs.path }}
+          DIRECTORY: ${{ github.workspace }}/${{ inputs.path }}
         run: |
           pushd "${DIRECTORY}"
 
