@@ -21,6 +21,13 @@ on:
         required: true
         description: "The device to make packages for"
 
+permissions:
+  actions: write
+  contents: write
+  packages: write
+  pull-requests: read
+  statuses: read
+
 jobs:
   boot:
     name: Make Boot
