@@ -125,6 +125,6 @@ jobs:
             PKGS_PREFIX="${REGISTRY}/${USERNAME,,}" \
             PKGS="${TALOS_VERSION}-${DEVICE}" \
             PUSH=true \
-            all
+            "docker-${DEVICE}"
 
           popd
