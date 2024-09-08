@@ -140,9 +140,8 @@ jobs:
 
   base:
     name: Base
-    # TODO: Remove when testing is complete
-    #needs:
-    #  - packages
+    needs:
+      - packages
     uses: ./.github/workflows/base.yaml
     secrets: inherit
     with:
@@ -160,10 +159,9 @@ jobs:
 
   overlay:
     name: Overlay
-    # TODO: Remove when testing is complete
-    #needs:
-    #  - packages
-    #  - base
+    needs:
+      - packages
+      - base
     uses: ./.github/workflows/overlay.yaml
     secrets: inherit
     with:
@@ -181,11 +179,10 @@ jobs:
 
   boot:
     name: Boot
-    # TODO: Remove when testing is complete
-    #needs:
-    #  - packages
-    #  - base
-    #  - overlay
+    needs:
+      - packages
+      - base
+      - overlay
     uses: ./.github/workflows/boot.yaml
     secrets: inherit
     with:
