@@ -78,7 +78,7 @@ jobs:
         with:
           registry: ${{ inputs.registry }}
           username: ${{ inputs.username }}
-          password: ${{ secrets.PAT_PACKAGES }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: crane_setup
         name: Set up Crane
@@ -90,7 +90,7 @@ jobs:
         env:
           CRANE_REGISTRY: ${{ inputs.registry }}
           CRANE_USERNAME: ${{ inputs.username }}
-          CRANE_PASSWORD: ${{ secrets.PAT_PACKAGES }}
+          CRANE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "${CRANE_PASSWORD}" | crane auth login "${CRANE_REGISTRY,,}" --username "${CRANE_USERNAME}" --password-stdin
 
@@ -105,7 +105,7 @@ jobs:
       - id: make_overlay
         name: Make overlay
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TALOS_VERSION: ${{ inputs.talos_version }}
           DEVICE: ${{ inputs.device }}
           REGISTRY: ${{ inputs.registry }}
