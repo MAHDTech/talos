@@ -54,7 +54,7 @@ jobs:
       - id: get_package_names
         name: Get package names
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
         run: |
           PACKAGES=$(gh api \
             --header "Accept: application/vnd.github+json" \
@@ -73,7 +73,7 @@ jobs:
           type: container
           user: ${{ env.USER }}
           keep: 3
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_PACKAGES }}
           dry-run: false
           names: ${{ steps.get_package_names.outputs.package_names }}
 

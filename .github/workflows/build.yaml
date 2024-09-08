@@ -98,6 +98,26 @@ defaults:
 
 jobs:
   ##################################################
+  # Pre-flight checks
+  ##################################################
+  check:
+    name: Check
+    runs-on: self-hosted
+
+    steps:
+      - id: check_env
+        name: Check packages
+        env:
+          PAT_PACKAGES: ${{ secrets.PAT_PACKAGES }}
+        run: |
+          echo "Checking Personal Access Token"
+          if [[ "${PAT_PACKAGES:-EMPTY}" == "EMPTY" ]]; then
+            echo "PAT_PACKAGES is not set."
+            echo "Please set the PAT_PACKAGES environment variable with a Personal Access Token that has the correct scopes."
+            exit 1
+          fi
+
+  ##################################################
   # Packages
   ##################################################
 
@@ -246,7 +266,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ inputs.device }} v${{ steps.calver.outputs.package_version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_PACKAGES }}
           tag_name: ${{ steps.calver.outputs.package_version }}
           prerelease: false
           generate_release_notes: true
