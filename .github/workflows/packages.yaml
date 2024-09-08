@@ -35,7 +35,7 @@ on:
 
 jobs:
   packages:
-    name: Packages
+    name: Build Packages
 
     runs-on: self-hosted
 

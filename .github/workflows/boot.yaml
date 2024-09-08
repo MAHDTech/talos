@@ -35,7 +35,7 @@ on:
 
 jobs:
   boot:
-    name: Boot
+    name: Build Boot
 
     runs-on: self-hosted
 

@@ -35,7 +35,7 @@ on:
 
 jobs:
   base:
-    name: Base
+    name: Build Base
 
     runs-on: self-hosted
 
