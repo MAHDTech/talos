@@ -110,7 +110,7 @@ jobs:
       username: ${{ github.actor }}
       repository: ${{ inputs.repo_packages }}
       branch: ${{ inputs.branch_packages }}
-      path: ${{ github.workspace }}/_make/packages
+      path: _make/packages
       talos_version: ${{ inputs.talos_version }}
       device: ${{ inputs.device }}
 

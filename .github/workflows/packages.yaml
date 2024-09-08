@@ -93,7 +93,7 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.branch }}
-          path: ${{ inputs.path }}
+          path: ${{ github.workspace }}/${{ inputs.path }}
 
       - id: make_packages
         name: Make packages
