@@ -1,0 +1,135 @@
+---
+name: Packages
+
+on:
+  workflow_call:
+    inputs:
+      registry:
+        type: string
+        required: true
+        description: "The registry to push the packages to"
+      username:
+        type: string
+        required: true
+        description: "The username to login to the registry"
+      password:
+        type: string
+        required: true
+        description: "The password to login to the registry"
+      token:
+        type: string
+        required: true
+        description: "The token to use to authenticate with to GitHub"
+      repository:
+        type: string
+        required: true
+        description: "The repository to clone"
+      branch:
+        type: string
+        required: true
+        description: "The branch to checkout"
+      path:
+        type: string
+        required: true
+        description: "The path to checkout the repository to"
+      talos_version:
+        type: string
+        required: true
+        description: "The Talos version to make packages for"
+      device:
+        type: string
+        required: true
+        description: "The device to make packages for"
+
+jobs:
+  packages:
+    name: Packages
+
+    runs-on: self-hosted
+
+    strategy:
+      fail-fast: true
+
+    steps:
+      - id: dependencies
+        name: Dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq make
+
+      - id: setup_qemu
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - id: setup_buildx
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - id: login_to_registry
+        name: Login to registry (Docker)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ inputs.username }}
+          password: ${{ inputs.password }}
+
+      - id: crane_setup
+        name: Set up Crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - id: crane_login
+        name: Login to registry (Crane)
+        shell: bash
+        env:
+          CRANE_REGISTRY: ${{ inputs.registry }}
+          CRANE_USERNAME: ${{ inputs.username }}
+          CRANE_PASSWORD: ${{ inputs.password }}
+        run: |
+          echo "${CRANE_PASSWORD}" | crane auth login "${CRANE_REGISTRY,,}" --username "${CRANE_USERNAME}" --password-stdin
+
+      - id: checkout_repository_make
+        name: Checkout repository for make
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.branch }}
+          path: ${{ inputs.path }}
+
+      - id: make_packages
+        name: Make packages
+        env:
+          GITHUB_TOKEN: ${{ inputs.token }}
+          TALOS_VERSION: ${{ inputs.talos_version }}
+          DEVICE: ${{ inputs.device }}
+          REGISTRY: ${{ inputs.registry }}
+          USERNAME: ${{ inputs.username }}
+          TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
+          DIRECTORY: ${{ github.workspace }}/_make/packages
+        run: |
+          pushd "${DIRECTORY}"
+
+          export GITHUB_TOKEN
+
+          echo "##### Making kernel config #####"
+          make \
+            USERNAME="${USERNAME,,}" \
+            kernel-olddefconfig
+
+          echo "##### Making packages (kernel)#####"
+          make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
+            PLATFORM=linux/amd64,linux/arm64 \
+            PUSH=true \
+            kernel
+
+          echo "##### Making packages (all) #####"
+          make \
+            USERNAME="${USERNAME,,}" \
+            REGISTRY="${REGISTRY}" \
+            TAG="${TAG}" \
+            PLATFORM=linux/amd64,linux/arm64 \
+            PUSH=true
+          popd
