@@ -95,6 +95,7 @@ jobs:
           OVERLAY_NAME: ${{ inputs.device }}
           OVERLAY_IMAGE: ${{ inputs.registry }}/${{ inputs.username }}/sbc-rockchip:${{ inputs.talos_version }}-${{ inputs.device }}
         run: |
+          mkdir _out
           docker run \
             --name imager \
             --rm \
