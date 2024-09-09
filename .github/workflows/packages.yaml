@@ -12,14 +12,6 @@ on:
         type: string
         required: true
         description: "The username to login to the registry"
-      password:
-        type: string
-        required: true
-        description: "The password to login to the registry"
-      token:
-        type: string
-        required: true
-        description: "The token to use to authenticate with to GitHub"
       repository:
         type: string
         required: true
@@ -41,16 +33,30 @@ on:
         required: true
         description: "The device to make packages for"
 
+permissions:
+  actions: write
+  contents: write
+  packages: write
+  pull-requests: read
+  statuses: read
+
 jobs:
   packages:
-    name: Packages
+    name: Make Packages
 
     runs-on: self-hosted
+
+    timeout-minutes: 1440
+    continue-on-error: false
 
     strategy:
       fail-fast: true
 
     steps:
+      - id: checkout_repository
+        name: Checkout repository
+        uses: actions/checkout@v4
+
       - id: dependencies
         name: Dependencies
         shell: bash
@@ -72,7 +78,7 @@ jobs:
         with:
           registry: ${{ inputs.registry }}
           username: ${{ inputs.username }}
-          password: ${{ inputs.password }}
+          password: ${{ secrets.PAT_PACKAGES }}
 
       - id: crane_setup
         name: Set up Crane
@@ -84,7 +90,7 @@ jobs:
         env:
           CRANE_REGISTRY: ${{ inputs.registry }}
           CRANE_USERNAME: ${{ inputs.username }}
-          CRANE_PASSWORD: ${{ inputs.password }}
+          CRANE_PASSWORD: ${{ secrets.PAT_PACKAGES }}
         run: |
           echo "${CRANE_PASSWORD}" | crane auth login "${CRANE_REGISTRY,,}" --username "${CRANE_USERNAME}" --password-stdin
 
@@ -94,29 +100,27 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.branch }}
-          path: ${{ inputs.path }}
+          path: ${{ github.workspace }}/${{ inputs.path }}
 
       - id: make_packages
         name: Make packages
         env:
-          GITHUB_TOKEN: ${{ inputs.token }}
+          GITHUB_TOKEN: ${{ secrets.PAT_PACKAGES }}
           TALOS_VERSION: ${{ inputs.talos_version }}
           DEVICE: ${{ inputs.device }}
           REGISTRY: ${{ inputs.registry }}
           USERNAME: ${{ inputs.username }}
           TAG: ${{ inputs.talos_version }}-${{ inputs.device }}
-          DIRECTORY: ${{ github.workspace }}/_make/packages
+          DIRECTORY: ${{ github.workspace }}/${{ inputs.path }}
         run: |
           pushd "${DIRECTORY}"
-
-          export GITHUB_TOKEN
 
           echo "##### Making kernel config #####"
           make \
             USERNAME="${USERNAME,,}" \
             kernel-olddefconfig
 
-          echo "##### Making packages (kernel)#####"
+          echo "##### Making packages (kernel) #####"
           make \
             USERNAME="${USERNAME,,}" \
             REGISTRY="${REGISTRY}" \

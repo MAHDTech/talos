@@ -86,7 +86,6 @@ permissions:
 env:
   FORCE_COLOR: "1"
 
-  REGISTRY: ghcr.io
   ORGANISATION: ${{ github.repository_owner }}
   PROJECT: ${{ github.event.repository.name }}
 
@@ -99,41 +98,43 @@ defaults:
 
 jobs:
   ##################################################
+  # Pre-flight checks
+  ##################################################
+  check:
+    name: Check
+    runs-on: self-hosted
+
+    steps:
+      - id: check_env
+        name: Check packages
+        env:
+          PAT_PACKAGES: ${{ secrets.PAT_PACKAGES }}
+        run: |
+          echo "Checking Personal Access Token"
+          if [[ "${PAT_PACKAGES:-EMPTY}" == "EMPTY" ]]; then
+            echo "PAT_PACKAGES is not set."
+            echo "Please set the PAT_PACKAGES environment variable with a Personal Access Token that has the correct scopes."
+            exit 1
+          fi
+
+  ##################################################
   # Packages
   ##################################################
 
   packages:
     name: Packages
-
-    timeout-minutes: 1440
-    continue-on-error: false
-
-    runs-on: self-hosted
-
-    strategy:
-      fail-fast: true
-      matrix:
-        os:
-          - ubuntu-latest
-
-    steps:
-      - id: checkout_repository
-        name: Checkout repository
-        uses: actions/checkout@v4
-
-      - id: packages
-        name: Packages
-        uses: ./.github/workflows/packages.yaml
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.PAT_PACKAGES }}
-          token: ${{ secrets.PAT_PACKAGES }}
-          repository: ${{ inputs.repo_packages }}
-          branch: ${{ inputs.branch_packages }}
-          path: ${{ github.workspace }}/_make/packages
-          talos_version: ${{ inputs.talos_version }}
-          device: ${{ inputs.device }}
+    needs:
+      - check
+    uses: ./.github/workflows/packages.yaml
+    secrets: inherit
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      repository: ${{ inputs.repo_packages }}
+      branch: ${{ inputs.branch_packages }}
+      path: _make/packages
+      talos_version: ${{ inputs.talos_version }}
+      device: ${{ inputs.device }}
 
   ##################################################
   # Base
@@ -141,39 +142,19 @@ jobs:
 
   base:
     name: Base
-
     needs:
+      - check
       - packages
-
-    timeout-minutes: 1440
-    continue-on-error: false
-
-    runs-on: self-hosted
-
-    strategy:
-      fail-fast: true
-      matrix:
-        os:
-          - ubuntu-latest
-
-    steps:
-      - id: checkout_repository
-        name: Checkout repository
-        uses: actions/checkout@v4
-
-      - id: base
-        name: Base
-        uses: ./.github/workflows/base.yaml
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.PAT_PACKAGES }}
-          token: ${{ secrets.PAT_PACKAGES }}
-          repository: ${{ inputs.repo_packages }}
-          branch: ${{ inputs.branch_packages }}
-          path: ${{ github.workspace }}/_make/base
-          talos_version: ${{ inputs.talos_version }}
-          device: ${{ inputs.device }}
+    uses: ./.github/workflows/base.yaml
+    secrets: inherit
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      repository: ${{ inputs.repo_base }}
+      branch: ${{ inputs.branch_base }}
+      path: _make/base
+      talos_version: ${{ inputs.talos_version }}
+      device: ${{ inputs.device }}
 
   ##################################################
   # Overlay
@@ -181,40 +162,20 @@ jobs:
 
   overlay:
     name: Overlay
-
     needs:
+      - check
       - packages
       - base
-
-    timeout-minutes: 1440
-    continue-on-error: false
-
-    runs-on: self-hosted
-
-    strategy:
-      fail-fast: true
-      matrix:
-        os:
-          - ubuntu-latest
-
-    steps:
-      - id: checkout_repository
-        name: Checkout repository
-        uses: actions/checkout@v4
-
-      - id: overlay
-        name: Overlay
-        uses: ./.github/workflows/overlay.yaml
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.PAT_PACKAGES }}
-          token: ${{ secrets.PAT_PACKAGES }}
-          repository: ${{ inputs.repo_overlay }}
-          branch: ${{ inputs.branch_overlay }}
-          path: ${{ github.workspace }}/_make/overlay
-          talos_version: ${{ inputs.talos_version }}
-          device: ${{ inputs.device }}
+    uses: ./.github/workflows/overlay.yaml
+    secrets: inherit
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      repository: ${{ inputs.repo_overlay }}
+      branch: ${{ inputs.branch_overlay }}
+      path: _make/overlay
+      talos_version: ${{ inputs.talos_version }}
+      device: ${{ inputs.device }}
 
   ##################################################
   # Boot
@@ -222,41 +183,18 @@ jobs:
 
   boot:
     name: Boot
-
     needs:
+      - check
       - packages
       - base
       - overlay
-
-    timeout-minutes: 1440
-    continue-on-error: false
-
-    runs-on: self-hosted
-
-    strategy:
-      fail-fast: true
-      matrix:
-        os:
-          - ubuntu-latest
-
-    steps:
-      - id: checkout_repository
-        name: Checkout repository
-        uses: actions/checkout@v4
-
-      - id: boot
-        name: Boot
-        uses: ./.github/workflows/boot.yaml
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.PAT_PACKAGES }}
-          token: ${{ secrets.PAT_PACKAGES }}
-          repository: ${{ inputs.repo_overlay }}
-          branch: ${{ inputs.branch_overlay }}
-          path: ${{ github.workspace }}/_make/overlay
-          talos_version: ${{ inputs.talos_version }}
-          device: ${{ inputs.device }}
+    uses: ./.github/workflows/boot.yaml
+    secrets: inherit
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      talos_version: ${{ inputs.talos_version }}
+      device: ${{ inputs.device }}
 
   ##################################################
   # Release
@@ -268,6 +206,7 @@ jobs:
     if: ${{ github.event.inputs.release == 'true' }}
 
     needs:
+      - check
       - packages
       - base
       - overlay
@@ -280,13 +219,18 @@ jobs:
         name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.device }}-${{ inputs.talos_version }}
           path: ${{ github.workspace }}/_artifacts
 
-      - id: show_artifacts
-        name: Show artifacts
+      - id: rename_artifacts
+        name: Rename artifacts
         run: |
-          ls -lah ${{ github.workspace }}/_artifacts
+          pushd ${{ github.workspace }}/_artifacts
+          ls -lah
+          echo "Renaming ${{ inputs.device }} image"
+          mv \
+            metal-arm64.raw.xz \
+            ${{ inputs.device }}-${{ inputs.talos_version }}.raw.xz
+          popd
 
       - id: calver
         name: Set Calver Version
@@ -325,12 +269,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ inputs.device }} v${{ steps.calver.outputs.package_version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_PACKAGES }}
           tag_name: ${{ steps.calver.outputs.package_version }}
           prerelease: false
           generate_release_notes: true
           fail_on_unmatched_files: true
           append_body: true
+          files: ${{ github.workspace }}/_artifacts/**
           body: |
             ## Images
 
@@ -340,7 +285,5 @@ jobs:
             ```bash
             talosctl upgrade \
               --nodes <your_nodes> \
-              --image ${{ env.REGISTRY }}/${{ github.actor }}/installer:${{ inputs.talos_version }}-${{ inputs.device }}
+              --image ghcr.io/${{ github.actor }}/installer:${{ inputs.talos_version }}-${{ inputs.device }}
             ```
-
-          files: ${{ github.workspace }}/_artifacts/${{ inputs.device }}-${{ inputs.talos_version }}
