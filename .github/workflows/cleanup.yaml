@@ -68,7 +68,7 @@ jobs:
 
       - id: delete_old_packages
         name: Delete old packages
-        uses: smartsquaregmbh/delete-old-packages@v0.8.0
+        uses: smartsquaregmbh/delete-old-packages@v0.8.1
         with:
           type: container
           user: ${{ env.USER }}
